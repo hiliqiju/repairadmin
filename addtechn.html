@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="layui/css/layui.css"/>
+    <link rel="stylesheet" type="text/css" href="css/adduser.css">
+</head>
+<body>
+<form class="layui-form" enctype="multipart/form-data">
+    <div class="layui-form-item">
+        <label class="layui-form-label">
+            <i class="layui-icon layui-icon-username" style="font-size: 30px; color: #1E9FFF;"></i>
+        </label>
+        <div class="layui-input-block">
+            <input type="text" name="username" required lay-verify="required" placeholder="请输入技术人员账号"
+                   autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn layui-bg-blue" lay-submit lay-filter="formAdd">添加</button>
+        </div>
+    </div>
+</form>
+
+<!-- ---------------js-------------- -->
+<script src="./layui/layui.js"></script>
+<script>
+    layui.use(['form', 'layer', 'element', 'jquery'], function () {
+        var form = layui.form
+        var layer = layui.layer
+        var $$ = layui.jquery
+        var element = layui.element
+        //获取缓存中的token
+        var data = layui.sessionData("infos");
+        var token = data.info[0].token;
+        //监听提交
+        form.on('submit(formAdd)', function (data) {
+            $$.ajax({
+                url: 'http://119.45.143.167:5001/repairapp/v1/techns',
+                method: 'POST',
+                headers: {
+                    token: token
+                },
+                data: data.field,
+                success: function (res) {
+                    if (res.code !== 2000) {
+                        layer.msg(res.msg + '，请勿重复添加', {icon: 2, time: 1500});
+                        return false;
+                    } else {
+                        layer.open({
+                            title: "提示",
+                            content: res.msg + '，是否继续？',
+                            icon: 1,
+                            closeBtn: 0,
+                            btn: ['是', '否'],
+                            btn2: function () {
+                                let index = parent.layer.getFrameIndex(window.name);//获得index
+                                parent.layer.close(index);
+                                parent.layui.table.reload('techntb'); //重载父页表格，参数为表格ID
+                            }
+                        });
+                    }
+                },
+                error: function (err) {
+                    console.log(err);
+                    layer.msg('请求失败', {icon: 2, time: 1500})
+                },
+            });
+            return false;
+        })
+    });
+</script>
+</body>
+</html>

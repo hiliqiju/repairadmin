@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="layui/css/layui.css">
+</head>
+<body>
+<button id="add" type="button" class="layui-btn layui-btn-sm layui-btn-normal">添加</button>
+<table id="usertb" lay-filter="test"></table>
+<script type="text/html" id="index">
+    {{d.LAY_TABLE_INDEX+1}}
+</script>
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+
+<!--js-->
+<script src="./layui/layui.js"></script>
+<script>
+    layui.use(['element', 'table', 'jquery', 'form', 'layer'], function () {
+        var element = layui.element;
+        var table = layui.table;
+        var $$ = layui.jquery;
+        var form = layui.form;
+        var layer = layui.layer;
+        //获取缓存中的token
+        var data = layui.sessionData("infos");
+        var token = data.info[0].token;
+        table.render({
+            elem: '#usertb',
+            method: 'GET',
+            url: 'http://119.45.143.167:5001/repairapp/v1/users',
+            headers: {
+                token: token
+            },
+            contentType: 'application/json',
+            parseData: function (res) { //res 即为原始返回的数据
+                if (res.code !== 2000) {
+                    layer.msg('请重新登录', {icon: 2, time: 1500});
+                }
+            },
+            response: {
+                statusName: 'code',
+                statusCode: 2000
+            },
+            page: false,
+            cols: [
+                [
+                    {field: 'index', title: '序号', sort: true, fixed: 'left', templet: '#index', width: '10%'},
+                    {field: 'id', title: '用户ID', hide: true},
+                    {field: 'username', title: '账号', width: '20%'},
+                    {field: 'password', title: '密码', width: '50%'},
+                    {fixed: 'right', title: '操作', align: 'center', toolbar: '#barDemo', width: '20%'}
+                ]
+            ]
+        });
+        table.on('tool(test)', function (obj) {
+            var data = obj.data;  //获取当前行数据
+            var layEvent = obj.event;
+            if (layEvent === 'del') {
+                layer.confirm('确认删除账户(' + data.username + ')吗？', {
+                    title: '警告',
+                    offset: '60px',
+                    icon: 5,
+                }, function (index) {
+                    //向服务端发送删除指令
+                    var url = "http://119.45.143.167:5001/repairapp/v1/users";
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('DELETE', url, true);
+                    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded"); //必须写在open和send中间
+                    xhr.setRequestHeader("token", token);
+                    xhr.send("id=" + data.id);
+                    xhr.onreadystatechange = function (res) {
+                        if (xhr.readyState == 4 && xhr.status == 200) {
+                            obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
+                            layer.close(index)
+                            layer.msg('删除成功！', {icon: 1, time: 1500, offset: '60px'});
+                        } else {
+                            layer.msg('删除失败！', {icon: 2, time: 1500, offset: '60px'});
+                        }
+                    };
+                });
+                return false;
+            } else if (layEvent === 'LAYTABLE_TIPS') {
+                layer.alert('Hi，头部工具栏扩展的右侧图标');
+                return false;
+            }
+        });
+        $$('#add').click(function () {
+            layer.open({
+                title: '添加账户',
+                //调整弹框的大小
+                area: ['700px', '550px'],
+                shadeClose: true, //点击旁边地方自动关闭
+                anim: 2, //动画
+                type: 2, //弹出层的基本类型
+                maxmin: true, //显示最大化最小化按钮
+                content: ['adduser.html', 'no'],
+
+            });
+        });
+    });
+</script>
+</body>
+</html>

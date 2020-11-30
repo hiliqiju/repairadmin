@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>报修小程序</title>
+    <link rel="icon" href="./imgs/tool.png">
+    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="./layui/css/layui.css">
+</head>
+<body class="layui-layout-body">
+<div class="layui-layout layui-layout-admin">
+    <div class="layui-header">
+        <div class="layui-logo">报修小程序</div>
+        <!-- 头部区域（可配合layui已有的水平导航） -->
+        <ul class="layui-nav layui-layout-left">
+            <li class="layui-nav-item layui-this"><a href="">登录</a></li>
+        </ul>
+    </div>
+
+    <div class="re-body">
+        <!-- 内容主体区域 -->
+        <form class="layui-form">
+            <div class="layui-form-item">
+                <label class="layui-form-label">
+                    <i class="layui-icon layui-icon-username" style="font-size: 30px; color: #1E9FFF;"></i>
+                </label>
+                <div class="layui-input-block">
+                    <input type="text" name="username" required lay-verify="required" placeholder="请输入账号"
+                           autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">
+                    <i class="layui-icon layui-icon-password" style="font-size: 30px; color: #1E9FFF;"></i>
+                </label>
+                <div class="layui-input-block">
+                    <input type="password" name="password" required lay-verify="required" placeholder="请输入密码"
+                           autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button class="layui-btn layui-bg-blue" lay-submit lay-filter="formLogin">立即登录</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="re-footer">
+        © hello world 侵权必究
+    </div>
+</div>
+
+<!--js -->
+<script src="./layui/layui.js"></script>
+<script>
+    //JavaScript代码区域
+    layui.use(['element', 'form', 'jquery', 'layer'], function () {
+        var element = layui.element;
+        var form = layui.form;
+        var $$ = layui.jquery;
+        var layer = layui.layer;
+
+        //监听提交
+        form.on('submit(formLogin)', function (data) {
+            $$.ajax({
+                url: 'http://119.45.143.167:5001/repairapp/v1/login',
+                method: 'POST',
+                data: data.field,
+                success: function (res) {
+                    // console.log('-------', res);
+                    if (res.code !== 2000) {
+                        layer.msg(res.msg, {icon: 5, time: 1500});
+                    } else if (res.data.permission !== '2') {
+                        layer.msg('不是管理员账号', {icon: 5, time: 1500})
+                    } else {
+                        layer.msg(res.msg, {icon: 6, time: 1000}, function () {
+                            //暂存数据
+                            layui.sessionData('infos', {
+                                key: 'info',
+                                value: [
+                                    {'token': res.token},
+                                    {'username': res.data.username}
+                                ]
+                            });
+                            location.href = 'index.html';
+                        })
+                    }
+                },
+                error: function (res) {
+                    console.log(res);
+                    layer.msg('请求失败！', {icon: 5, time: 1500});
+                }
+            })
+            return false;
+        });
+    });
+</script>
+</body>
+</html>

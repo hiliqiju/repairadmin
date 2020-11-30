@@ -1,0 +1,15 @@
+.re-footer {
+    position: absolute;
+    bottom: 0;
+    background-color: #EEE9E9;
+    line-height: 46px;
+    width: 100%;
+    text-align: center;
+}
+
+.re-body {
+    width: 50%;
+    position: absolute;
+    top: 20%;
+    left: 20%;
+}
